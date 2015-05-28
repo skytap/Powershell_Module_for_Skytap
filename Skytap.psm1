@@ -2,9 +2,24 @@ if ($PSBoundParameters['Debug']) {
 	$DebugPreference = 'Continue'
 }
 
-$username = "mike.measel@gmail.com"
-$password = "b035e25ae13ee5fa0f2e53d2fe13991a328f90fc"
-$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
+$username = "support@skytap.com"
+$password = "yourSkytapToken"
+
+# place your username and token in user_token.ps1
+# 
+
+Write-host "dot sourcing usertoken file now"
+Write-host "format:"
+Write-host "  `$global:username = "skytap@email.com""
+Write-host "  `$global:password = "yourSkytapToken""
+
+. .\user_token.ps1
+
+$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $global:username,$global:password)))
+
+#forget the names
+$global:username = ''
+$global:password = ''
 
 $global:url = "https://cloud.skytap.com"
 $global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
@@ -477,5 +492,6 @@ function Get-Templates ([string]$templateId, [string]$attributes) {
 					}
 				return $result
 				}	
+
 
 

@@ -2,8 +2,8 @@ if ($PSBoundParameters['Debug']) {
 	$DebugPreference = 'Continue'
 }
 
-$username = "support@skytap.com"
-$password = "yourSkytapToken"
+$global:username = ''
+$global:password = ''
 
 # place your username and token in user_token.ps1
 # 
@@ -12,7 +12,7 @@ Write-host "dot sourcing usertoken file now"
 Write-host "format:"
 Write-host "  `$global:username = "skytap@email.com""
 Write-host "  `$global:password = "yourSkytapToken""
-
+#force source it 
 . .\user_token.ps1
 
 $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $global:username,$global:password)))

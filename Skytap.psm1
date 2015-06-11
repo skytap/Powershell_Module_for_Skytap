@@ -404,6 +404,29 @@ function Get-Projects ([string]$projectId){
 				return $result
 				}
 
+function Get-ProjectEnvironments ([string]$projectId){
+<#
+    .SYNOPSIS
+      Get all environments for a project
+    .SYNTAX
+        Get-ProjectEnvironments projectId
+       Returns Environment(s) list object
+    .EXAMPLE
+       Get-ProjectConfiguration 654321
+  #>
+ 			try { 
+				$uri = "$global:url/projects/$projectId/configurations"
+	
+				$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					} catch { 
+						$errorResponse = $_.Exception.Response
+						$result = Show-APIFailure($errorResponse)			
+					}
+				return $result
+				}
+		
+				
 function Get-Users ([string]$userId) {
 <#
     .SYNOPSIS

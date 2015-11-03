@@ -2,31 +2,31 @@ if ($PSBoundParameters['Debug']) {
 	$DebugPreference = 'Continue'
 }
 
-$global:username = ''
-$global:password = ''
+if ($PSVersionTable.PSVersion.major -lt 4) {
+	write-host "This module requires Powershell Version 4" -foregroundcolor "magenta"
+	return
+}
+if (Test-Path '.\user_token') {
 
-# place your username and token in user_token.ps1
-# 
+	Get-Content user_token | Foreach-Object{
+	   $var = $_.Split('=')
+	   New-Variable -Name $var[0] -Value $var[1]
+	}
+	
+	Write-host "Skytap user is $username"
+} else {
+	Write-host "The user_token file not found in current directory" -foregroundcolor "magenta"
+	return }
 
-Write-host "dot sourcing usertoken file now"
-Write-host "format:"
-Write-host "  `$global:username = "skytap@email.com""
-Write-host "  `$global:password = "yourSkytapToken""
-#force source it 
-. .\user_token.ps1
-
-$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $global:username,$global:password)))
-
-#forget the names
-$global:username = ''
-$global:password = ''
+$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
 
 $global:url = "https://cloud.skytap.com"
 $global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
 
+$global:tOffset = 0
 
-function Show-APIFailure ($eresp) {
-
+function Show-RequestFailure ($eresp) {
+       
 	$errorResponse = $eresp.GetResponseStream()
 	$reader = New-Object System.IO.StreamReader($errorResponse)
 	$reader.BaseStream.Position = 0
@@ -39,8 +39,18 @@ function Show-APIFailure ($eresp) {
 		method = $eresp.Method
 	}
 	return $nob
+}
 	
-
+function Show-RequestFailure2 ($eresp) {
+       
+       return {$eresp | Get-member}
+	$nob = New-Object -TypeName psobject -Property @{
+		requestResultCode = [int]$eresp.StatusCode
+		eDescription = $eresp.StatusDescription
+		eMessage = $responseBody
+		#method = $eresp.Method
+	}
+	return $nob
 }	
 
 function Set-runstateColor {
@@ -68,7 +78,7 @@ function Add-ConfigurationToProject ([string]$configId, [string]$projectId ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)		
+				$result = Show-RequestFailure($errorResponse)		
 		}
 		return $result
 	}
@@ -92,7 +102,7 @@ function Update-RunState ( [string]$configId, [string]$newstate ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)		
+				$result = Show-RequestFailure($errorResponse)		
 		}
 	return $result
 	}
@@ -116,7 +126,7 @@ function Connect-Network ([string]$sourceNetwork, [string]$destinationNetwork){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch {
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)		
+				$result = Show-RequestFailure($errorResponse)		
 		}
 	return $result
 	}
@@ -142,13 +152,40 @@ function New-EnvironmentfromTemplate ( [string]$templateId ){
 
 			} catch { 
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)			
+				$result = Show-RequestFailure($errorResponse)			
 			}
 		return $result
 	
 	}
 
+function New-Project( [string]$projectName, [string]$projectDescription ){
+<#
+    .SYNOPSIS
+      Create a new project
+    .SYNTAX
+       New-Project Name [Description]
+       Returns new project ID
+    .EXAMPLE
+      New-Project "Global Training"  "This is a training project"
+      ---
+      New-Project -projectName "Global Training" -projectDescription "A project for global training"
+  #>
+	try {
+		$uri = "$global:url/projects"
+		$body = @{
+				name = $projectName
+				summary = $projectDescription
+				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 
+			} catch { 
+				$errorResponse = $_.Exception.Response
+				$result = Show-RequestFailure($errorResponse)			
+			}
+		return $result
+	
+	}
 
 function Publish-URL ([string]$configId, [string]$ptype, [string]$pname) { 
 <#
@@ -181,7 +218,7 @@ function Publish-URL ([string]$configId, [string]$ptype, [string]$pname) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)			
+					$result = Show-RequestFailure($errorResponse)			
 				}
 			return $result
 			}
@@ -213,7 +250,7 @@ function Save-ConfigurationToTemplate ([string]$configId, [string]$tname) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)		
+					$result = Show-RequestFailure($errorResponse)		
 			}
 			return $result
 		}
@@ -234,7 +271,7 @@ function Remove-Configuration ([string]$configId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)		
+					$result = Show-RequestFailure($errorResponse)		
 			}
 			return $result
 		}
@@ -254,7 +291,7 @@ function Add-TemplateToProject ([string]$projectId, [string]$templateId) {
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)		
+				$result = Show-RequestFailure($errorResponse)		
 		}
 		return $result
 	}
@@ -278,12 +315,41 @@ function Add-TemplateToConfiguration ([string]$configId, [string]$templateId) {
 
 			} catch { 
 				$errorResponse = $_.Exception.Response
-				$result = Show-APIFailure($errorResponse)			
+				$result = Show-RequestFailure($errorResponse)			
+			}
+		return $result
+	
+	}
+function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[string]$email,[string]$accountRole="restricted_user") {
+<#
+    .SYNOPSIS
+      Adds a new user
+    .SYNTAX
+       Add-User Login-name First-name Last-Name Email-Address Account-Role
+    .EXAMPLE
+      Add-User mmeasel mike measel mmeasel@skytap.com admin
+  #>
+	try {
+		$uri = "$global:url/users"
+		$body = @{
+				login_name = $loginName
+				email = $email
+				first_name = $firstName
+				last_name = $lastName
+				account_role = $accountRole
+				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$errorResponse = $_.Exception.Response
+				$result = Show-RequestFailure($errorResponse)			
 			}
 		return $result
 	
 	}
 
+	
 function Publish-Service ([string]$configId, [string]$vmId, [string]$interfaceId, [string]$serviceId, [string]$port) {
 <#
     .SYNOPSIS
@@ -304,7 +370,7 @@ function Publish-Service ([string]$configId, [string]$vmId, [string]$interfaceId
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)			
+					$result = Show-RequestFailure($errorResponse)			
 				}
 			return $result
 			}
@@ -325,7 +391,28 @@ function Get-PublishedURLs ([string]$configId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)			
+					$result = Show-RequestFailure($errorResponse)			
+				}
+			return $result
+			}
+			
+function Get-PublishedURLDetails ([string]$url) {
+<#
+    .SYNOPSIS
+      Get published URL details
+    .SYNTAX
+       Get-PublishedURLDetails url
+       Returns published url objects
+    .EXAMPLE
+      Get-PublishedURLDetails https://cloud.skytap.com/configurations/3125360/publish_sets/878322 
+  #>
+		try {
+			$uri = $url
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$errorResponse = $_.Exception.Response
+					$result = Show-RequestFailure($errorResponse)			
 				}
 			return $result
 			}
@@ -346,7 +433,7 @@ function Get-PublishedServices ([string]$configId, [string]$vmId, [string]$inter
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$errorResponse = $_.Exception.Response
-					$result = Show-APIFailure($errorResponse)			
+					$result = Show-RequestFailure($errorResponse)			
 				}
 			return $result
 			}
@@ -374,7 +461,7 @@ function Get-VMs ([string]$configId, [string]$vm) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+						$result = Show-RequestFailure($errorResponse)			
 					}
 				return $result
 				}
@@ -399,7 +486,7 @@ function Get-Projects ([string]$projectId){
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+						$result = Show-RequestFailure($errorResponse)			
 					}
 				return $result
 				}
@@ -421,7 +508,7 @@ function Get-ProjectEnvironments ([string]$projectId){
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+						$result = Show-RequestFailure($errorResponse)			
 					}
 				return $result
 				}
@@ -447,7 +534,7 @@ function Get-Users ([string]$userId) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+						$result = Show-RequestFailure($errorResponse)			
 					}
 				return $result
 				}
@@ -475,12 +562,12 @@ function Get-Configurations ([string]$configId) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+						$result = Show-RequestFailure($errorResponse)			
 					}
 				return $result
 				}
 				
-function Get-Templates ([string]$templateId, [string]$attributes) {
+function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2="F",[int]$startCount="100",[string]$qscope="company") {
 <#
     .SYNOPSIS
       Get template(s) optionally filter by attributes
@@ -497,24 +584,184 @@ function Get-Templates ([string]$templateId, [string]$attributes) {
         Only specific template details
         	Get-Templates 12345
   #>
-			try {
-				if ($attributes){
-					$uri = "$global:url/templates?$attributes"
-				}else{
-					if ($templateId){	
-						$uri = "$global:url/templates/$templateId"
-					}else{
-						$uri = "$global:url/templates"
+  		$more_records = $True
+  		if ($v2 -ne 'F') {
+				While ($more_records) {
+  					try {
+						if ($attributes){
+							$uri = $global:url + '/v2/templates?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset + '&query=' + $attributes
+						}else{
+							if ($templateId){	
+								$uri = $global:url + '/v2/templates/' + $templateId
+							}else{
+								$uri = $global:url + '/v2/templates?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset
+								}
+							}
+						write-host $uri
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
+							} catch { 
+								$errorResponse = $_.Exception.Response
+								$result = Show-RequestFailure2($errorResponse)			
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
+						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
+						$hdr = $result.headers['Content-Range']
+						write-host "header" $hdr
+						if ($hdr.length -gt 0) {
+							$hcounters = $hdr.Split('-')[1]
+							[Int]$lastItem,[int]$itemTotal = $hcounters.Split('/')
+							write-host "counts " $lastItem $itemTotal
+							if ($lastItem -lt ($itemTotal)){                                         
+								$global:tOffset = $lastItem + 1
+							}
+							else 
+							{
+								$more_records = $False
+							}
+						}
+						else 
+						{
+							$more_records = $False
 						}
 					}
-				$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
-				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
-					} catch { 
-						$errorResponse = $_.Exception.Response
-						$result = Show-APIFailure($errorResponse)			
+					$result =  $hold_result
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					return $result
+					
+				} else {
+					try {
+						if ($templateId){	
+							$uri = "$global:url/templates/$templateId"
+						}else{
+							$uri = "$global:url/templates"
+							}
+					$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+						} catch { 
+							$errorResponse = $_.Exception.Response
+							$result = Show-RequestFailure($errorResponse)			
+						}
+					return $result
 					}
-				return $result
-				}	
+			}
 
+function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title, $scheduleActions,[string]$startAt,[string]$recurringDays,[string]$endAt,[string]$timezone="Pacific Time (US & Canada)",[string]$deleteAtEnd,[string]$newConfigName) {
+<#
+    .SYNOPSIS
+      Create a schedule
+    .SYNTAX
+      Add-Schedule $stype $objectId $title $scheduleActions $startAt $recurringDays $endAt $timezone $deleteAtEnd $newConfigName
+       Returns schedule object
+    .EXAMPLE
+    	   Add-Schedule -objectId <template or environment Id> -title "Eight to Five" -scheduleActions [action hash] -startAt "2013/09/09 09:00" -endAt "2013/10/09 0900" -timezone "Central Time (US & Canada)" -deleteAtEnd $True
+#>    
+   	
+		$uri = "$global:url/schedules"
+			
+			$body = @{
+					title = $title					
+					start_at = $startAt
+					time_zone = $timezone
+					actions = @( $scheduleActions )
+					}
+							
+			if ($stype -eq 'config') { 
+				$body.add("configuration_id",$objectId)
+			}else{
+				$body.add("template_id",$objectId)
+			}
+			if ($endAt) { $body.add("end_at",$endAt) }
+			if ($recurringDays) { $body.add("recurring_days",$recurringDays) }
+			if ($deleteAtEnd) { $body.add("delete_at_end",$True) }
+		
+		try {
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$errorResponse = $_.Exception.Response
+				$result = Show-RequestFailure($errorResponse)			
+			}
+		return $result
+	
+	}
+	
+function Get-PublicIPs ([string]$configId) {
+<#
+    .SYNOPSIS
+      Get Public IP table
+    .SYNTAX
+       Get-PublicIPs
+       Returns list of IPs
+    .EXAMPLE
+      Get-PublicIPs
+  #>
+		try {
+			$uri = "$global:url/ips"
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$errorResponse = $_.Exception.Response
+					$result = Show-RequestFailure($errorResponse)			
+				}
+			return $result
+	}
+	
+function Connect-PublicIP ([string]$vmId, [string]$interface,[string]$publicIP){
+<#
+    .SYNOPSIS
+      Connect Public IP to network
+    .SYNTAX
+       Connect-Network Source-Network Destination-Network
+    .EXAMPLE
+      Connect-Network 78901 10987
+  #>
+	try {
+		$uri = "$global:url/vms/$vmId/interfaces/$interfaceId/ips"
+		$body = @{
+				ip = $publicIP
+			}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch {
+				$errorResponse = $_.Exception.Response
+				$result = Show-RequestFailure($errorResponse)		
+		}
+	return $result
+	}
+	
+function Update-AutoSuspend ( [string]$configId, [string]$suspendOnIdle ){
+<#
+   .SYNOPSIS
+     Change an environment's auto-suspend setting, null = off, 300-86400 is valid range.
+   .SYNTAX
+      Update-AutoSuspend ConfigId NumberOfSeconds
+   .EXAMPLE
+     Update-RunState 12345 300
+ #>
+    try {
+        $uri = "$url/configurations/$configId"
+        
+        $body = @{
+            suspend_on_idle = $suspendOnIdle
+        }
+        $result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+        $result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+            } catch { 
+                $errorResponse = $_.Exception.Response
+                $result = Show-RequestFailure($errorResponse)        
+        }
+    return $result
+    }
+
+
+
+			
 
 

@@ -713,7 +713,7 @@ function Get-PublicIPs ([string]$configId) {
 			return $result
 	}
 	
-function Connect-PublicIP ([string]$vmId, [string]$interface,[string]$publicIP){
+function Connect-PublicIP ([string]$vmId, [string]$interfaceId,[string]$publicIP){
 <#
     .SYNOPSIS
       Connect Public IP to network
@@ -722,8 +722,10 @@ function Connect-PublicIP ([string]$vmId, [string]$interface,[string]$publicIP){
     .EXAMPLE
       Connect-Network 78901 10987
   #>
+  write-host $publicIP
 	try {
 		$uri = "$global:url/vms/$vmId/interfaces/$interfaceId/ips"
+		write-host $uri
 		$body = @{
 				ip = $publicIP
 			}
@@ -760,6 +762,33 @@ function Update-AutoSuspend ( [string]$configId, [string]$suspendOnIdle ){
     return $result
     }
 
+function Add-UserToProject( [string]$projectId, [string]$userId,[string]$projectRole="participant" ){
+<#
+    .SYNOPSIS
+      Add a user to a project
+    .SYNTAX
+        Add-UserToProject projectID userID [project-role]
+       Return
+    .EXAMPLE
+      Add-UserToProject 123344 3828 viewer
+      ---
+      New-Project -projectName "Global Training" -projectDescription "A project for global training"
+  #>
+	try {
+		$uri = "$global:url/projects/$projectId/users/$userId"
+		$body = @{
+				role = $projectRole
+				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$errorResponse = $_.Exception.Response
+				$result = Show-RequestFailure($errorResponse)			
+			}
+		return $result
+	
+	}
 
 
 			

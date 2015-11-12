@@ -100,8 +100,6 @@ function Edit-Configuration ( [string]$configId, $configAttributes ){
 		}
 	return $result
 	}
-Set-Alias Edit-Configuration Edit-Environment
-	
 		
 	
 function Update-RunState ( [string]$configId, [string]$newstate ){
@@ -275,8 +273,7 @@ function Save-ConfigurationToTemplate ([string]$configId, [string]$tname) {
 			}
 			return $result
 		}
-Set-Alias Save-ConfigurationToTemplate Save-EnvironmentToTemplate
-		
+
 function Remove-Configuration ([string]$configId) {
 <#
     .SYNOPSIS
@@ -297,7 +294,6 @@ function Remove-Configuration ([string]$configId) {
 			}
 			return $result
 		}
-Set-Alias Remove-Configuration Remove-Environment
 
 function Add-TemplateToProject ([string]$projectId, [string]$templateId) {
 <#
@@ -343,8 +339,6 @@ function Add-TemplateToConfiguration ([string]$configId, [string]$templateId) {
 		return $result
 	
 	}
-Set-Alias Add-TemplateToConfiguration Add-TemplateToEnvironment
-	
 function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[string]$email,[string]$accountRole="restricted_user") {
 <#
     .SYNOPSIS
@@ -815,7 +809,6 @@ function Add-UserToProject( [string]$projectId, [string]$userId,[string]$project
 	
 	}
 
-Export-ModuleMember -function * -alias *
 
 			
 

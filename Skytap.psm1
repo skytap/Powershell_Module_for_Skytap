@@ -6,22 +6,39 @@ if ($PSVersionTable.PSVersion.major -lt 4) {
 	write-host "This module requires Powershell Version 4" -foregroundcolor "magenta"
 	return
 }
-if (Test-Path '.\user_token') {
 
-	Get-Content user_token | Foreach-Object{
-	   $var = $_.Split('=')
-	   New-Variable -Name $var[0] -Value $var[1]
-	}
-	
+function Set-Authorization ([string]$tokenfile='user_token', [string]$user, [string]$pwd) {
+<#
+    .SYNOPSIS
+      Creates authorization headers from file or parameters
+    .SYNTAX
+       Add-ConfigurationToProject EnvironmentId ProjectId
+    .EXAMPLE
+      Add-ConfigurationToProject 12345 54321
+#>
+	  if ($user) {    #use params instead of file 
+		  $username = $user
+		  $password = $pwd
+	  } else {
+		  if (Test-Path $tokenfile) {
+			Get-Content $tokenfile | Foreach-Object{
+			   $var = $_.Split('=')
+			   Set-Variable -Name $var[0] -Value $var[1]
+				}
+		  } else {
+				Write-host "The user_token file $tokenfile was not found" -foregroundcolor "magenta"
+		  		return -1 }
+		
+		
+	  }
 	Write-host "Skytap user is $username"
-} else {
-	Write-host "The user_token file not found in current directory" -foregroundcolor "magenta"
-	return }
+	$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
+	$global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
+	return 0
+}
 
-$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
-
+Set-Authorization
 $global:url = "https://cloud.skytap.com"
-$global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
 $global:tOffset = 0
 $global:errorResponse = ''
 
@@ -797,6 +814,7 @@ function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2='T'
 					return $result
 					}
 			}
+Set-Alias Get-Template Get-Templates
 
 function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title, $scheduleActions,[string]$startAt,[string]$recurringDays,[string]$endAt,[string]$timezone="Pacific Time (US & Canada)",[string]$deleteAtEnd,[string]$newConfigName) {
 <#
@@ -859,6 +877,32 @@ function Get-PublicIPs ([string]$configId) {
 				}
 			return $result
 	}
+	
+function Get-Schedules ([string]$scheduleId) {
+<#
+    .SYNOPSIS
+      Get Schedules
+    .SYNTAX
+       Get-Schedules
+       Returns list of Schedules
+    .EXAMPLE
+      Get-Schedules
+      Get-Schedule 1234
+  #>
+		try {
+			if ($scheduleId) {
+				$uri = "$global:url/schedules/" + $scheduleId 
+			} else {
+			$uri = "$global:url/schedules" }
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure			
+				}
+			return $result
+	}
+Set-Alias Get-Schedule Get-Schedules
 	
 function Connect-PublicIP ([string]$vmId, [string]$interfaceId,[string]$publicIP){
 <#

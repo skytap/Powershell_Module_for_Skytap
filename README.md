@@ -1,19 +1,70 @@
 # Powershell_Module
 A powershell module to simplify API usage
 
-Installation: (substitute your \User directory or 
+Installation - copy these files to powershell module directory: 
 
-$home\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>
+	skytap.psd1
+	Skytap.psm1
+	user_token
+
+	(substitute your \User directory )
+
+	$home\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>
 
 example:    Directory: C:\Users\Skytap\Documents\WindowsPowerShell\Modules\Skytap
 
 
-Mode                LastWriteTime     Length Name
-----                -------------     ------ ----
--a---         5/28/2015   9:39 AM       5296 skytap.psd1
--a---         5/28/2015  11:11 AM      14636 Skytap.psm1
--a---         5/28/2015  10:50 AM        105 user_token.ps1
+Use:  Import-Module Skytap [-verbose]
 
+	When loaded the module will look for the user_token file  You can have multiple user_token files for different environments or access
+	To change user_token location user Set-Authorization <path to user_token file>   -  ex:   Set-Authorization c:\temp\user_token_alt
+	
+Syntax help:
+   Get-Help <Function Name>
+	
+List of Functions ( 11/26/15 )
 
-Use:  Import-Module .\Skytap.psm1 [-verbose]
+  Add-ConfigurationToProject
+  Add-Schedule
+  Add-TemplateToConfiguration
+  Add-TemplateToProject
+  Add-User
+  Add-UserToProject
+  Connect-Network
+  Connect-PublicIP
+  Edit-Configuration
+  Get-Configurations
+  Get-ProjectEnvironments
+  Get-Projects
+  Get-PublicIPs
+  Get-PublishedServices
+  Get-PublishedURLDetails
+  Get-PublishedURLs
+  Get-Schedules
+  Get-Templates
+  Get-Users
+  Get-VMs
+  New-EnvironmentfromTemplate
+  New-Project
+  Publish-Service
+  Publish-URL
+  Remove-Configuration
+  Save-ConfigurationToTemplate
+  Set-Authorization
+  Show-RequestFailure
+  Show-RequestFailure2
+  Update-AutoSuspend
+  Update-RunState
+  
+ alias Add-TemplateToEnvironment
+ alias Edit-Environment
+ alias Get-Configuration
+ alias Get-Environment
+ alias Get-Environments
+ alias Get-Schedule
+ alias Get-Template
+ alias Remove-Environment
+ alias Save-EnvironmentToTemplate
+
+Questions or comments to mmeasel@skytap.com
 

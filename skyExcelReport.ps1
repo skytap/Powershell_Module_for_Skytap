@@ -1,4 +1,5 @@
 # generate excel workbook reports from skytap data
+# requires Export-XLSX - https://gallery.technet.microsoft.com/office/Export-XLSX-PowerShell-f2f0c035
 
 function reportUsers {
 $eUsers = @()

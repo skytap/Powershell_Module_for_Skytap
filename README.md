@@ -24,47 +24,47 @@ Syntax help:
 	
 List of Functions ( 11/26/15 )
 
-  Add-ConfigurationToProject
-  Add-Schedule
-  Add-TemplateToConfiguration
-  Add-TemplateToProject
-  Add-User
-  Add-UserToProject
-  Connect-Network
-  Connect-PublicIP
-  Edit-Configuration
-  Get-Configurations
-  Get-ProjectEnvironments
-  Get-Projects
-  Get-PublicIPs
-  Get-PublishedServices
-  Get-PublishedURLDetails
-  Get-PublishedURLs
-  Get-Schedules
-  Get-Templates
-  Get-Users
-  Get-VMs
-  New-EnvironmentfromTemplate
-  New-Project
-  Publish-Service
-  Publish-URL
-  Remove-Configuration
-  Save-ConfigurationToTemplate
-  Set-Authorization
-  Show-RequestFailure
-  Show-RequestFailure2
-  Update-AutoSuspend
-  Update-RunState
-  
- alias Add-TemplateToEnvironment
- alias Edit-Environment
- alias Get-Configuration
- alias Get-Environment
- alias Get-Environments
- alias Get-Schedule
- alias Get-Template
- alias Remove-Environment
- alias Save-EnvironmentToTemplate
+	  Add-ConfigurationToProject
+	  Add-Schedule
+	  Add-TemplateToConfiguration
+	  Add-TemplateToProject
+	  Add-User
+	  Add-UserToProject
+	  Connect-Network
+	  Connect-PublicIP
+	  Edit-Configuration
+	  Get-Configurations
+	  Get-ProjectEnvironments
+	  Get-Projects
+	  Get-PublicIPs
+	  Get-PublishedServices
+	  Get-PublishedURLDetails
+	  Get-PublishedURLs
+	  Get-Schedules
+	  Get-Templates
+	  Get-Users
+	  Get-VMs
+	  New-EnvironmentfromTemplate
+	  New-Project
+	  Publish-Service
+	  Publish-URL
+	  Remove-Configuration
+	  Save-ConfigurationToTemplate
+	  Set-Authorization
+	  Show-RequestFailure
+	  Show-RequestFailure2
+	  Update-AutoSuspend
+	  Update-RunState
+	  
+	  alias Add-TemplateToEnvironment
+	  alias Edit-Environment
+	  alias Get-Configuration
+	  alias Get-Environment
+	  alias Get-Environments
+	  alias Get-Schedule
+	  alias Get-Template
+	  alias Remove-Environment
+	  alias Save-EnvironmentToTemplate
 
 Questions or comments to mmeasel@skytap.com
 

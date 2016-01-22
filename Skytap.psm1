@@ -129,7 +129,37 @@ function Edit-Configuration ( [string]$configId, $configAttributes ){
 		}
 	return $result
 	}
+	
 Set-Alias Edit-Environment Edit-Configuration 
+
+function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
+<#
+    .SYNOPSIS
+      Change userdata 
+    .SYNTAX
+       Edit-VMUserdata ConfigId VMid Contents
+       {
+	"contents": "Text you want saved in the user data field"
+	}
+    .EXAMPLE
+      Edit-Configuration 12345  54321 @{"contents"="text for userdata field"}
+      Or
+      $userdata = @{"contents"="This machine does not conform"}
+      Edit-VMUserdata 12345 54321 $userdata
+      
+  #>
+	try {
+		$uri = "$url/configurations/$configId/vms/$vmid/user_data"
+		
+		$body = $userdata
+		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure		
+		}
+	return $result
+	}
 	
 		
 	
@@ -519,6 +549,27 @@ function Get-VMs ([string]$configId, [string]$vm) {
 					}
 				return $result
 				}
+				
+function Get-VMUserData ([string]$configId, [string]$vm) {
+<#
+    .SYNOPSIS
+      Get VM userdata ( part of metadata )
+    .SYNTAX
+       Get-VM configId vmId
+       Returns vm userdata
+    .EXAMPLE
+      Get-VMUserdata 12345 54321 
+  #>
+			try {				
+				$uri = "$global:url/configurations/$configId/vms/$vm/user_data"
+				$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+				return $result
+				}
 
 function Get-Projects ([string]$projectId,[string]$attributes,[string]$v2="T",[int]$startCount="100",[string]$qscope="company") {
 <#
@@ -878,7 +929,7 @@ function Get-PublicIPs ([string]$configId) {
 			return $result
 	}
 	
-function Get-Schedules ([string]$scheduleId) {
+function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T',[int]$startCount="100",[string]$qscope='company') {
 <#
     .SYNOPSIS
       Get Schedules
@@ -889,19 +940,71 @@ function Get-Schedules ([string]$scheduleId) {
       Get-Schedules
       Get-Schedule 1234
   #>
-		try {
-			if ($scheduleId) {
-				$uri = "$global:url/schedules/" + $scheduleId 
-			} else {
-			$uri = "$global:url/schedules" }
-			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
-			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
-				} catch { 
-					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure			
-				}
-			return $result
+   $more_records = $True
+  		if ($v2 -eq 'T') {
+				While ($more_records) {
+  					try {
+						if ($attributes){
+							$uri = $global:url + '/v2/schedules?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset + '&query=' + $attributes
+						}else{
+							if ($configId){	
+								$uri = $global:url + '/v2/schedules/' + $scheduleId
+							}else{
+								$uri = $global:url + '/v2/schedules?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset
+								}
+							}
+						write-host $uri
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
+							} catch { 
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure2($errorResponse)			
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
+						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
+						$hdr = $result.headers['Content-Range']
+						#write-host "header" $hdr
+						if ($hdr.length -gt 0) {
+							$hcounters = $hdr.Split('-')[1]
+							[Int]$lastItem,[int]$itemTotal = $hcounters.Split('/')
+							write-host "counts " $lastItem $itemTotal
+							if (($lastItem + 1)  -lt ($itemTotal)){                                         
+								$global:tOffset = $lastItem + 1
+							}
+							else 
+							{
+								$more_records = $False
+							}
+						}
+						else 
+						{
+							$more_records = $False
+						}
+					}
+					$result =  $hold_result
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					$global:tOffset = 0
+					return $result
+				} else {
+					try {
+						if ($scheduleId) {
+							$uri = "$global:url/schedules/" + $scheduleId 
+						} else {
+						$uri = "$global:url/schedules" }
+						$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+						$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+							} catch { 
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure			
+							}
+						return $result
 	}
+}
 Set-Alias Get-Schedule Get-Schedules
 	
 function Connect-PublicIP ([string]$vmId, [string]$interfaceId,[string]$publicIP){

@@ -142,7 +142,7 @@ function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
 	"contents": "Text you want saved in the user data field"
 	}
     .EXAMPLE
-      Edit-Configuration 12345  54321 @{"contents"="text for userdata field"}
+      Edit-VMUserdata 12345  54321 @{contents="text for userdata field"}
       Or
       $userdata = @{"contents"="This machine does not conform"}
       Edit-VMUserdata 12345 54321 $userdata
@@ -671,7 +671,7 @@ function Get-ProjectEnvironments ([string]$projectId){
 				}
 		
 				
-function Get-Users ([string]$userId) {
+function Get-Users ([string]$userId,[string]$attributes,[string]$v2="T",[int]$startCount="100",[string]$qscope="company")  {
 <#
     .SYNOPSIS
       Get all users
@@ -681,6 +681,57 @@ function Get-Users ([string]$userId) {
     .EXAMPLE
        Get-Users
   #>
+   $more_records = $True
+  		if ($v2 -eq 'T') {
+				While ($more_records) {
+  					try {
+						if ($attributes){
+							$uri = $global:url + '/v2/users?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset + '&query=' + $attributes
+						}else{
+							if ($userId){	
+								$uri = $global:url + '/v2/users/' + $userId
+							}else{
+								$uri = $global:url + '/v2/users?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset
+								}
+							}
+						write-host $uri
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
+							} catch { 
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
+						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
+						$hdr = $result.headers['Content-Range']
+						#write-host "header" $hdr
+						if ($hdr.length -gt 0) {
+							$hcounters = $hdr.Split('-')[1]
+							[Int]$lastItem,[int]$itemTotal = $hcounters.Split('/')
+							write-host "counts " $lastItem $itemTotal
+							if (($lastItem + 1)  -lt ($itemTotal)){                                         
+								$global:tOffset = $lastItem + 1
+							}
+							else 
+							{
+								$more_records = $False
+							}
+						}
+						else 
+						{
+							$more_records = $False
+						}
+					}
+					$result =  $hold_result
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					$global:tOffset = 0
+					return $result
+		}else{
 			try {
 				if ($userId){
 					$uri = "$global:url/users/$userId"
@@ -695,7 +746,10 @@ function Get-Users ([string]$userId) {
 					}
 				return $result
 				}
-
+		}
+		
+Set-Alias Get-User Get-Users
+				
 function Get-Configurations ([string]$configId, [string]$attributes,[string]$v2="T",[int]$startCount="100",[string]$qscope="company") {
 <#
     .SYNOPSIS
@@ -867,7 +921,7 @@ function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2='T'
 			}
 Set-Alias Get-Template Get-Templates
 
-function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title, $scheduleActions,[string]$startAt,[string]$recurringDays,[string]$endAt,[string]$timezone="Pacific Time (US & Canada)",[string]$deleteAtEnd,[string]$newConfigName) {
+function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title, $scheduleActions,[string]$startAt,$recurringDays,[string]$endAt,[string]$timezone="Pacific Time (US & Canada)",[string]$deleteAtEnd,[string]$newConfigName) {
 <#
     .SYNOPSIS
       Create a schedule
@@ -895,7 +949,7 @@ function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title
 			if ($endAt) { $body.add("end_at",$endAt) }
 			if ($recurringDays) { $body.add("recurring_days",$recurringDays) }
 			if ($deleteAtEnd) { $body.add("delete_at_end",$True) }
-		
+		#write-host (ConvertTo-Json $body)
 		try {
 		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
@@ -929,7 +983,7 @@ function Get-PublicIPs ([string]$configId) {
 			return $result
 	}
 	
-function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T',[int]$startCount="100",[string]$qscope='company') {
+function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T',[int]$startCount="100",[string]$qscope='admin') {
 <#
     .SYNOPSIS
       Get Schedules

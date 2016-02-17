@@ -432,8 +432,58 @@ function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[str
 		return $result
 	
 	}
-
 	
+function Add-Group ([string]$groupName,[string]$description) {
+<#
+    .SYNOPSIS
+      Adds a new group
+    .SYNTAX
+       Add-Group Name Description
+    .EXAMPLE
+      Add-Group EastUsers "Users in east region"
+  #>
+	try {
+		$uri = "$global:url/groups"
+		$body = @{
+				name = $groupName
+				description = $description
+				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure			
+			}
+		return $result
+	
+	}
+function Add-Department ([string]$deptName,[string]$description) {
+<#
+    .SYNOPSIS
+      Adds a new department
+    .SYNTAX
+       Add-Department Name Description
+    .EXAMPLE
+      Add-Department Accounting "Users in east region"
+  #>
+	try {
+		$uri = "$global:url/departments"
+		$body = @{
+				name = $deptName
+				description = $description
+				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure			
+			}
+		return $result
+	
+	}
+		
 function Publish-Service ([string]$configId, [string]$vmId, [string]$interfaceId, [string]$serviceId, [string]$port) {
 <#
     .SYNOPSIS
@@ -1127,6 +1177,28 @@ function Add-UserToProject( [string]$projectId, [string]$userId,[string]$project
 		$body = @{
 				role = $projectRole
 				}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure			
+			}
+		return $result
+	
+	}
+function Add-UserToGroup( [string]$groupId, [string]$userId ){
+<#
+    .SYNOPSIS
+      Add a user to a group
+    .SYNTAX
+        Add-UserToProject groupID userID 
+       Return
+    .EXAMPLE
+      Add-UserToGroup 123344 3828 
+  #>
+	try {
+		$uri = "$global:url/groups/$groupId/users/$userId"
 		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 

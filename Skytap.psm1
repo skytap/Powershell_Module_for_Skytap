@@ -719,8 +719,103 @@ function Get-ProjectEnvironments ([string]$projectId){
 					}
 				return $result
 				}
-		
 				
+function Get-DepartmentQuotas ([string]$deptId) {
+<#
+    .SYNOPSIS
+      Get DepartmentQuotas 
+    .EXAMPLE
+      Get-DepartmentQuotas 12345 
+  #>
+			try {				
+				$uri = "$global:url/departments/$deptId/quotas"
+				$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+				return $result
+				}
+
+function Get-Departments ([string]$departmentId,[string]$attributes,[string]$v2="T",[int]$startCount="100",[string]$qscope="company")  {
+<#
+    .SYNOPSIS
+      Get all Departments
+    .SYNTAX
+        Get-Departments
+       Returns Departments list object
+    .EXAMPLE
+       Get-Departments
+  #>
+   $more_records = $True
+  		if ($v2 -eq 'T') {
+				While ($more_records) {
+  					try {
+						if ($attributes){
+							$uri = $global:url + '/v2/departments?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset + '&query=' + $attributes
+						}else{
+							if ($departmentId){	
+								$uri = $global:url + '/v2/departments/' + $departmentId
+							}else{
+								$uri = $global:url + '/v2/departments?scope=' + $qscope + '&count=' + $startCount + '&offset=' + $global:tOffset
+								}
+							}
+						write-host $uri
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
+							} catch { 
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
+						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
+						$hdr = $result.headers['Content-Range']
+						#write-host "header" $hdr
+						if ($hdr.length -gt 0) {
+							$hcounters = $hdr.Split('-')[1]
+							[Int]$lastItem,[int]$itemTotal = $hcounters.Split('/')
+							write-host "counts " $lastItem $itemTotal
+							if (($lastItem + 1)  -lt ($itemTotal)){                                         
+								$global:tOffset = $lastItem + 1
+							}
+							else 
+							{
+								$more_records = $False
+							}
+						}
+						else 
+						{
+							$more_records = $False
+						}
+					}
+					$result =  $hold_result
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					$global:tOffset = 0
+					return $result
+		}else{
+			try {
+				if ($departmentId){
+					$uri = "$global:url/departments/$departmentId"
+				}else{
+					$uri = "$global:url/departments"
+				}
+				$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+				return $result
+				}
+		}
+
+		
 function Get-Users ([string]$userId,[string]$attributes,[string]$v2="T",[int]$startCount="100",[string]$qscope="company")  {
 <#
     .SYNOPSIS
@@ -1009,6 +1104,69 @@ function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title
 				$result = Show-RequestFailure			
 			}
 		return $result
+	
+	}
+	
+function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$resource="svms",[string]$region="all",[string]$agg="month",[string]$groupby="user") {
+<#
+    .SYNOPSIS
+      Create Usage Report
+    .SYNTAX
+      Get-Usage  $stype $objectId $title $scheduleActions $startAt $recurringDays $endAt $timezone $deleteAtEnd $newConfigName
+       Returns schedule object
+    .EXAMPLE
+    	   Get-Usage  -rid <report Id>  -scheduleActions [action hash] -startAt "2013/09/09 09:00" -endAt "2013/10/09 0900" -timezone "Central Time (US & Canada)" -deleteAtEnd $True
+#>    
+   	
+		
+			if ($rid -eq '0') { 
+				$uri = "$global:url/reports"
+				$body = @{
+					start_date = $startAt
+					end_date = $endAt
+					resource_type = $resource
+					region = $region
+					group_by = $groupby
+					aggregate_by = $agg
+					results_format = 'csv'
+					timezone = 'UTC'
+					notify_by_email = $False
+					}
+					#write-host (ConvertTo-Json $body)
+					try {
+						$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+						$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+					return $result
+			}else{
+				
+				$uri = "$global:url/reports/" + $rid 
+				
+				try {
+					$result = Invoke-RestMethod -Uri $uri -Method GET  -ContentType "application/json" -Headers $global:headers 
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+		
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+					if ($result.ready = 'True') {
+						$uri = "$global:url/reports/" + $rid + '.csv'
+						try {
+							$result = Invoke-RestMethod -Uri $uri -Method GET  -ContentType "text/csv" -Headers $global:headers 
+							$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					
+								} catch { 
+									$global:errorResponse = $_.Exception
+									$result = Show-RequestFailure			
+								}
+					}
+					return $result
+			}
 	
 	}
 	

@@ -1154,7 +1154,7 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
 						$global:errorResponse = $_.Exception
 						$result = Show-RequestFailure			
 					}
-					if ($result.ready = 'True') {
+					if ($result.ready -eq $True) {
 						$uri = "$global:url/reports/" + $rid + '.csv'
 						try {
 							$result = Invoke-RestMethod -Uri $uri -Method GET  -ContentType "text/csv" -Headers $global:headers 

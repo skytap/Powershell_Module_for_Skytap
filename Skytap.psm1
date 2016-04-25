@@ -7,6 +7,15 @@ if ($PSVersionTable.PSVersion.major -lt 4) {
 	return
 }
 
+function LogWrite ([string]$logthis) {              # logwrite INFO This is Info   -- logwrite DEBUG this is debuggin
+	$d = get-date -f o
+	#$loglevel = $logString.split(" ")[0]
+	#$logstring = $d + $logthis.replace($loglevel,'')
+	$logstring = $d + '  ' + $logthis
+	add-content -Path $logfile -Value $logstring
+}	
+	
+
 function Set-Authorization ([string]$tokenfile='user_token', [string]$user, [string]$pwd) {
 <#
     .SYNOPSIS
@@ -34,6 +43,7 @@ function Set-Authorization ([string]$tokenfile='user_token', [string]$user, [str
 	Write-host "Skytap user is $username"
 	$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
 	$global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
+	$global:logfile = $logfile
 	return 0
 }
 
@@ -357,6 +367,27 @@ function Remove-Configuration ([string]$configId) {
 			return $result
 		}
 Set-Alias  Remove-Environment Remove-Configuration
+
+function Remove-Project ([string]$projectId) {
+<#
+    .SYNOPSIS
+      Remove (DELETE) a project
+    .SYNTAX
+       Remove-Project
+    .EXAMPLE
+      Remove-Project 12345 
+  #>
+	try {
+			$uri = "$url/Projects/$projectId"
+			
+			$result = Invoke-RestMethod -Uri $uri -Method DELETE -ContentType "application/json" -Headers $headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure		
+			}
+			return $result
+		}
 
 function Add-TemplateToProject ([string]$projectId, [string]$templateId) {
 <#

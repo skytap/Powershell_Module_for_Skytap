@@ -80,21 +80,14 @@ function Show-RequestFailure  {
 	return $nob
 }
 	
-function Show-WebRequestFailure ($theException){
-	#write-host $theException
-           if ($theException){
-               if($theException.Response) {
-                   $createResultStatus = $theException.Response.StatusCode.value__
-                   $createResultStatusDescription = $theException.Response.StatusDescription
-               }
-               else {
-                   $createResultStatus = "-1"
-                   $createResultStatusDescription = $theException.Message
-               }
-           }
+function Show-RequestFailure2 ($eresp) {
+       
+       return {$eresp | Get-member}
 	$nob = New-Object -TypeName psobject -Property @{
-		requestResultCode = $createResultStatus
-		eDescription = $createResultStatusDescription
+		requestResultCode = [int]$eresp.StatusCode
+		eDescription = $eresp.StatusDescription
+		eMessage = $responseBody
+		#method = $eresp.Method
 	}
 	return $nob
 }	
@@ -115,8 +108,7 @@ function Add-ConfigurationToProject ([string]$configId, [string]$projectId ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 		return $result
 	}
@@ -143,8 +135,7 @@ function Edit-Configuration ( [string]$configId, $configAttributes ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 	return $result
 	}
@@ -175,8 +166,7 @@ function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 	return $result
 	}
@@ -202,8 +192,7 @@ function Update-RunState ( [string]$configId, [string]$newstate ){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 	return $result
 	}
@@ -227,8 +216,7 @@ function Connect-Network ([string]$sourceNetwork, [string]$destinationNetwork){
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch {
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 	return $result
 	}
@@ -254,14 +242,13 @@ function New-EnvironmentfromTemplate ( [string]$templateId ){
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
 	}
 
-function New-Project( [string]$projectName="New Project", [string]$projectDescription=" " ){
+function New-Project( [string]$projectName, [string]$projectDescription ){
 <#
     .SYNOPSIS
       Create a new project
@@ -273,11 +260,6 @@ function New-Project( [string]$projectName="New Project", [string]$projectDescri
       ---
       New-Project -projectName "Global Training" -projectDescription "A project for global training"
   #>
-	if ($projectName -eq 'New Project' ) {
-		write-host 'please supply a project name'
-		$result = [psobject] @{ eMessage  = 'Please supply a project name'; requestResultCode = '-1' }
-		return result
-	}
 	try {
 		$uri = "$global:url/projects"
 		$body = @{
@@ -289,14 +271,13 @@ function New-Project( [string]$projectName="New Project", [string]$projectDescri
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
 	}
 
-function Publish-URL ([string]$configId, [string]$ptype, [string]$pname,[Boolean]$sso=$False) { 
+function Publish-URL ([string]$configId, [string]$ptype, [string]$pname) { 
 <#
     .SYNOPSIS
       Create a published url for an environment 
@@ -318,25 +299,16 @@ function Publish-URL ([string]$configId, [string]$ptype, [string]$pname,[Boolean
 			} else {
 				$name = "Published set - $type" 
 					}
-			if ($sso) {
-				$body = @{
-						name = $name
-						publish_set_type = $type
-						sso_required = $sso
-						}
-				}else{
-					$body = @{
-						name = $name
-						publish_set_type = $type
-						}
+			
+			$body = @{
+					name = $name
+					publish_set_type = $type
 					}
-					
 			$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 			}
@@ -368,8 +340,7 @@ function Save-ConfigurationToTemplate ([string]$configId, [string]$tname) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure		
 			}
 			return $result
 		}
@@ -391,8 +362,7 @@ function Remove-Configuration ([string]$configId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure		
 			}
 			return $result
 		}
@@ -414,8 +384,7 @@ function Remove-Project ([string]$projectId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure		
 			}
 			return $result
 		}
@@ -435,8 +404,7 @@ function Add-TemplateToProject ([string]$projectId, [string]$templateId) {
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 		return $result
 	}
@@ -460,8 +428,7 @@ function Add-TemplateToConfiguration ([string]$configId, [string]$templateId) {
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -491,8 +458,7 @@ function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[str
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -518,8 +484,7 @@ function Add-Group ([string]$groupName,[string]$description) {
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -544,8 +509,7 @@ function Add-Department ([string]$deptName,[string]$description) {
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -571,8 +535,7 @@ function Publish-Service ([string]$configId, [string]$vmId, [string]$interfaceId
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 			}
@@ -593,8 +556,7 @@ function Get-PublishedURLs ([string]$configId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 			}
@@ -615,8 +577,7 @@ function Get-PublishedURLDetails ([string]$url) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 			}
@@ -637,8 +598,7 @@ function Get-PublishedServices ([string]$configId, [string]$vmId, [string]$inter
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 			}
@@ -666,8 +626,7 @@ function Get-VMs ([string]$configId, [string]$vm) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
 				return $result
 				}
@@ -688,8 +647,7 @@ function Get-VMUserData ([string]$configId, [string]$vm) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
 				return $result
 				}
@@ -718,11 +676,18 @@ function Get-Projects ([string]$projectId,[string]$attributes,[string]$v2="T",[i
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
-							}												
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 						$hdr = $result.headers['Content-Range']
 						#write-host "header" $hdr
@@ -747,7 +712,6 @@ function Get-Projects ([string]$projectId,[string]$attributes,[string]$v2="T",[i
 					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					$global:tOffset = 0
 					return $result
-					
 				} else {
 					try {
 					if ($projectId){
@@ -761,11 +725,6 @@ function Get-Projects ([string]$projectId,[string]$attributes,[string]$v2="T",[i
 							$global:errorResponse = $_.Exception
 							$result = Show-RequestFailure			
 						}
-						if ($result.StatusCode -ne 200) {
-							write-host $result.StatusCode
-							write-host $result.StatusDescription
-							return $result
-									}
 				return $result
 				}
 }
@@ -787,8 +746,7 @@ function Get-ProjectEnvironments ([string]$projectId){
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
 				return $result
 				}
@@ -806,8 +764,7 @@ function Get-DepartmentQuotas ([string]$deptId) {
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
 				return $result
 				}
@@ -836,11 +793,18 @@ function Get-Departments ([string]$departmentId,[string]$attributes,[string]$v2=
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 									
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
-							}						
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 						$hdr = $result.headers['Content-Range']
 						#write-host "header" $hdr
@@ -876,15 +840,8 @@ function Get-Departments ([string]$departmentId,[string]$attributes,[string]$v2=
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
-				if ($result.StatusCode -ne 200) {
-							write-host $result.StatusCode
-							write-host $result.StatusDescription
-							$result.requestResultCode = $result.StatusCode
-							return $result
-							}
 				return $result
 				}
 		}
@@ -914,11 +871,18 @@ function Get-Users ([string]$userId,[string]$attributes,[string]$v2="T",[int]$st
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
-							}			
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 						$hdr = $result.headers['Content-Range']
 						#write-host "header" $hdr
@@ -954,14 +918,8 @@ function Get-Users ([string]$userId,[string]$attributes,[string]$v2="T",[int]$st
 				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
-					if ($result.StatusCode -ne 200) {
-						write-host $result.StatusCode
-						write-host $result.StatusDescription
-						return $result
-						}
 				return $result
 				}
 		}
@@ -995,11 +953,18 @@ function Get-Configurations ([string]$configId, [string]$attributes,[string]$v2=
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 							
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
-							}						
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure2($errorResponse)			
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 						$hdr = $result.headers['Content-Range']
 						#write-host "header" $hdr
@@ -1024,8 +989,8 @@ function Get-Configurations ([string]$configId, [string]$attributes,[string]$v2=
 					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 					$global:tOffset = 0
 					return $result
+				} else {
 					
-				} else {					
 					try {
 					if ($configId){
 						$uri = "$global:url/configurations/$configId"
@@ -1038,11 +1003,6 @@ function Get-Configurations ([string]$configId, [string]$attributes,[string]$v2=
 							$global:errorResponse = $_.Exception
 							$result = Show-RequestFailure			
 						}
-						if ($result.StatusCode -ne 200) {
-							write-host $result.StatusCode
-							write-host $result.StatusDescription
-							return $result
-									}
 					return $result
 				}
 			}
@@ -1081,11 +1041,17 @@ function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2='T'
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure		
 							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 	
 						$hdr = $result.headers['Content-Range']
@@ -1126,11 +1092,6 @@ function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2='T'
 							$global:errorResponse = $_.Exception
 							$result = Show-RequestFailure			
 						}
-						if ($result.StatusCode -ne 200) {
-							write-host $result.StatusCode
-							write-host $result.StatusDescription
-							return $result
-									}
 					return $result
 					}
 			}
@@ -1171,8 +1132,7 @@ function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -1187,7 +1147,9 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
        Returns schedule object
     .EXAMPLE
     	   Get-Usage  -rid <report Id>  -scheduleActions [action hash] -startAt "2013/09/09 09:00" -endAt "2013/10/09 0900" -timezone "Central Time (US & Canada)" -deleteAtEnd $True
- #>    
+#>    
+   	
+		
 			if ($rid -eq '0') { 
 				$uri = "$global:url/reports"
 				$body = @{
@@ -1208,8 +1170,7 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
 
 					} catch { 
 						$global:errorResponse = $_.Exception
-						$result = Show-RequestFailure
-						return $result
+						$result = Show-RequestFailure			
 					}
 					return $result
 			}else{
@@ -1256,8 +1217,7 @@ function Get-PublicIPs ([string]$configId) {
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 
 					$global:errorResponse = $_.Exception
-					$result = Show-RequestFailure
-					return $result
+					$result = Show-RequestFailure			
 				}
 			return $result
 	}
@@ -1290,9 +1250,15 @@ function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T'
 						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
 										
 							} catch { 
-								$result = Show-WebRequestFailure($_.Exception)
-								return $result
-							}		
+								$global:errorResponse = $_.Exception
+								$result = Show-RequestFailure2($errorResponse)			
+							}
+						if ($result.StatusCode -ne 200) {
+							write-host $result.StatusCode
+							write-host $result.StatusDescription
+									return
+									}
+						
 						$hold_result = $hold_result + (ConvertFrom-Json $result.Content)
 						$hdr = $result.headers['Content-Range']
 						#write-host "header" $hdr
@@ -1329,11 +1295,6 @@ function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T'
 								$global:errorResponse = $_.Exception
 								$result = Show-RequestFailure			
 							}
-							if ($result.StatusCode -ne 200) {
-								write-host $result.StatusCode
-								write-host $result.StatusDescription
-								return $result
-									}
 						return $result
 	}
 }
@@ -1359,38 +1320,11 @@ function Connect-PublicIP ([string]$vmId, [string]$interfaceId,[string]$publicIP
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch {
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure		
 		}
 	return $result
 	}
-
-function Rename-Environment( [string]$configId, [string]$newName ){
-<#
-   .SYNOPSIS
-     Change an environment's name
-   .SYNTAX
-      Rename-Environment ConfigId "new environment name"
-   .EXAMPLE
-     Rename-Environment 12345 "hello world"
- #>
-    try {
-        $uri = "$url/configurations/$configId"
-        
-        $body = @{
-            name = $newName
-        }
-        $result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
-        $result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
-            } catch { 
-                $global:errorResponse = $_.Exception
-                $result = Show-RequestFailure
-                return $result
-        }
-    return $result
-    }
-Set-Alias Rename-Configuration Rename-Environment   
-    
+	
 function Update-AutoSuspend ( [string]$configId, [string]$suspendOnIdle ){
 <#
    .SYNOPSIS
@@ -1410,8 +1344,7 @@ function Update-AutoSuspend ( [string]$configId, [string]$suspendOnIdle ){
         $result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
             } catch { 
                 $global:errorResponse = $_.Exception
-                $result = Show-RequestFailure
-                return $result
+                $result = Show-RequestFailure        
         }
     return $result
     }
@@ -1438,8 +1371,7 @@ function Add-UserToProject( [string]$projectId, [string]$userId,[string]$project
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	
@@ -1461,8 +1393,7 @@ function Add-UserToGroup( [string]$groupId, [string]$userId ){
 
 			} catch { 
 				$global:errorResponse = $_.Exception
-				$result = Show-RequestFailure
-				return $result
+				$result = Show-RequestFailure			
 			}
 		return $result
 	

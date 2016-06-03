@@ -44,6 +44,7 @@ function Set-Authorization ([string]$tokenfile='user_token', [string]$user, [str
 	$auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $username,$password)))
 	$global:headers = @{"Accept" = "application/json"; Authorization=("Basic {0}" -f $auth)}
 	$global:logfile = $logfile
+	$global:account = $account
 	return 0
 }
 
@@ -1178,7 +1179,7 @@ function Add-Schedule ([string]$stype="config",[string]$objectId, [string]$title
 	
 	}
 	
-function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$resource="svms",[string]$region="all",[string]$agg="month",[string]$groupby="user") {
+function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$resource="svms",[string]$region="all",[string]$agg="month",[string]$groupby="user",[string]$format="csv") {
 <#
     .SYNOPSIS
       Create Usage Report
@@ -1197,8 +1198,8 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
 					region = $region
 					group_by = $groupby
 					aggregate_by = $agg
-					results_format = 'csv'
-					timezone = 'UTC'
+					results_format = $format
+					utc = $True
 					notify_by_email = $False
 					}
 					#write-host (ConvertTo-Json $body)

@@ -22,49 +22,60 @@ Use:  Import-Module Skytap [-verbose]
 Syntax help:
    Get-Help <Function Name>
 	
-List of Functions ( 11/26/15 )
+List of Functions ( 04/27/16 )
 
-	  Add-ConfigurationToProject
-	  Add-Schedule
-	  Add-TemplateToConfiguration
-	  Add-TemplateToProject
-	  Add-User
-	  Add-UserToProject
-	  Connect-Network
-	  Connect-PublicIP
-	  Edit-Configuration
-	  Get-Configurations
-	  Get-ProjectEnvironments
-	  Get-Projects
-	  Get-PublicIPs
-	  Get-PublishedServices
-	  Get-PublishedURLDetails
-	  Get-PublishedURLs
-	  Get-Schedules
-	  Get-Templates
-	  Get-Users
-	  Get-VMs
-	  New-EnvironmentfromTemplate
-	  New-Project
-	  Publish-Service
-	  Publish-URL
-	  Remove-Configuration
-	  Save-ConfigurationToTemplate
-	  Set-Authorization
-	  Show-RequestFailure
-	  Show-RequestFailure2
-	  Update-AutoSuspend
-	  Update-RunState
-	  
-	  alias Add-TemplateToEnvironment
-	  alias Edit-Environment
-	  alias Get-Configuration
-	  alias Get-Environment
-	  alias Get-Environments
-	  alias Get-Schedule
-	  alias Get-Template
-	  alias Remove-Environment
-	  alias Save-EnvironmentToTemplate
+ Add-ConfigurationToProject
+ Add-Department
+ Add-Group
+ Add-Schedule
+ Add-TemplateToConfiguration
+ Add-TemplateToProject
+ Add-User
+ Add-UserToGroup
+ Add-UserToProject
+ Connect-Network
+ Connect-PublicIP
+ Edit-Configuration
+ Edit-VMUserdata
+ Get-Configurations
+ Get-DepartmentQuotas
+ Get-Departments
+ Get-ProjectEnvironments
+ Get-Projects
+ Get-PublicIPs
+ Get-PublishedServices
+ Get-PublishedURLDetails
+ Get-PublishedURLs
+ Get-Schedules
+ Get-Templates
+ Get-Usage
+ Get-Users
+ Get-VMs
+ Get-VMUserData
+ New-EnvironmentfromTemplate
+ New-Project
+ Publish-Service
+ Publish-URL
+ Remove-Configuration
+ Remove-Project
+ Rename-Environment
+ Save-ConfigurationToTemplate
+ Set-Authorization
+ Show-RequestFailure
+ Show-WebRequestFailure
+ Update-AutoSuspend
+ Update-RunState
+ Update-AutoSuspend
+Alias: 
+	Add-TemplateToEnvironment
+ 	Edit-Environment
+ 	Get-Configuration
+ 	Get-Environment
+	Get-Environments
+	Get-Schedule
+	Get-Template
+	Remove-Environment
+	Save-EnvironmentToTemplate
 
 Questions or comments to mmeasel@skytap.com
 

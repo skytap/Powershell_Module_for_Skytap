@@ -17,11 +17,6 @@ if ($PSBoundParameters['Debug']) {
 	$DebugPreference = 'Continue'
 }
 
-if ($PSVersionTable.PSVersion.major -lt 4) {
-	write-host "This module requires Powershell Version 4" -foregroundcolor "magenta"
-	return
-}
-
 function LogWrite ([string]$logthis) {              # logwrite INFO This is Info   -- logwrite DEBUG this is debuggin
 	$d = get-date -f o
 	#$loglevel = $logString.split(" ")[0]

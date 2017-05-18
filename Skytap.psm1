@@ -167,6 +167,35 @@ function Edit-Configuration ( [string]$configId, $configAttributes ){
 	
 Set-Alias Edit-Environment Edit-Configuration 
 
+function Edit-VM ( [string]$configId, $vmid, $vmAttributes ){
+<#
+     .SYNOPSIS
+      Change VM attributes
+    .SYNTAX
+       Edit-VM  ConfigId VMId Attribute-Hash
+    .EXAMPLE
+      Edit-VM 12345 54321 @{name='my vm'; description='windows v10'}
+      
+      Or
+      
+      $Attrib = @{name='my vm'; description='windows v10'}
+      Edit-Configuration 12345 54321 $Attrib
+      
+  #>
+	try {
+		$uri = "$url/configurations/$configId/vms/$vmid/"
+		
+		$body = $vmAttributes
+		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+
 function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
 <#
     .SYNOPSIS
@@ -1202,7 +1231,7 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
       Get-Usage  $stype $objectId $title $scheduleActions $startAt $recurringDays $endAt $timezone $deleteAtEnd $newConfigName
        Returns schedule object
     .EXAMPLE
-    	   Get-Usage  -rid <report Id>  -scheduleActions [action hash] -startAt "2013/09/09 09:00" -endAt "2013/10/09 0900" -timezone "Central Time (US & Canada)" -deleteAtEnd $True
+    	   Get-Usage  -rid <report Id>  -startAt "2013/09/09 09:00" -endAt "2013/10/09 0900" -timezone "Central Time (US & Canada)" -deleteAtEnd $True
  #>    
 			if ($rid -eq '0') { 
 				$uri = "$global:url/reports"
@@ -1255,6 +1284,84 @@ function Get-Usage ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$r
 			}
 	
 	}
+	
+## get audit report
+function Get-AuditReport ([string]$rid='0', [string]$startAt,[string]$endAt,[string]$region="all",[string]$activity) {
+<#
+    .SYNOPSIS
+      Create Audit Report
+    .SYNTAX
+      Get-AuditReport  $stype $objectId $title $scheduleActions $startAt $recurringDays $endAt $timezone $deleteAtEnd $newConfigName
+       Returns report object
+    .EXAMPLE
+    	   Get-Audit  -rid <report Id>   -startAt "2016 09 09 09 00" -endAt "2016 10 09 09 00" 
+ #>    
+			if ($rid -eq '0') { 
+				$uri = "$global:url/auditing/exports"
+				$yy,$mm,$dd,$hr,$min = $startAt.split()
+				$dstart = @{
+					year = $yy
+					month = $mm
+					day = $dd
+					hour = $hr
+					minute = $min
+				}
+				$yy,$mm,$dd,$hr,$min = $endAt.split()
+				$dend = @{
+					year = $yy
+					month = $mm
+					day = $dd
+					hour = $hr
+					minute = $min
+				}	
+				$body = @{
+					date_start = $dstart
+					date_end = $dend
+					activity = $activity
+					#region = $region
+					#utc = $True
+					notify_by_email = $False
+					}
+					#write-host (ConvertTo-Json $body)
+					try {
+						$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+						$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure
+						return $result
+					}
+					return $result
+			}else{
+				
+				$uri = "$global:url/auditing/exports/" + $rid 
+				
+				try {
+					$result = Invoke-RestMethod -Uri $uri -Method GET  -ContentType "application/json" -Headers $global:headers 
+					$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+		
+					} catch { 
+						$global:errorResponse = $_.Exception
+						$result = Show-RequestFailure			
+					}
+					if ($result.ready -eq $True) {
+						$uri = "$global:url/auditing/exports/" + $rid + '.csv'
+						try {
+							$result = Invoke-RestMethod -Uri $uri -Method GET  -ContentType "text/csv" -Headers $global:headers 
+							$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+					
+								} catch { 
+									$global:errorResponse = $_.Exception
+									$result = Show-RequestFailure			
+								}
+					}
+					return $result
+			}
+	
+	}
+	
+	
 	
 function Get-PublicIPs ([string]$configId) {
 <#
@@ -1484,7 +1591,68 @@ function Add-UserToGroup( [string]$groupId, [string]$userId ){
 	
 	}
 
+<#
+    .SYNOPSIS
+      Get VM metadata - only works from within a VM
+    .SYNTAX
+        Get-Metadata
+        
+    .EXAMPLE
+      $meta = get-metadata
+  #>
+function get-metadata
+	{
+	$uri = 'http://gw/skytap'
+	try {
+		$meta = Invoke-WebRequest $uri -Method GET -ContentType 'application/json' -UseBasicParsing
+		$result = $meta.Content | convertfrom-json
+		#$myhost = $mc.name + "-" + $mc.id
+		#write-output $myhost
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+		} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+			}
+		return $result
+	}
+
+
+
+function Send-sharedrive([string]$localFilename, [string]$remoteFilename)
+    {
+    	try {
+			$furl = 'ftp://ftp-uswest.skytap.com/shared_drive'
+		$freq = [System.Net.FtpWebRequest]::Create($furl+'/'+$remoteFilename)
+		if ($ftpuser) {
+			$freq.Credentials = New-Object System.Net.NetworkCredential($ftpuser,$ftppwd)
+			$freq.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
+			$freq.UseBinary = $True
+			$freq.UsePassive = $True
+			$freq.KeepAlive = $False
+			$localfile = 'c:\users\skytap\'+$localFilename
+			$upcontent = gc -en byte $localfile
+			$freq.ContentLength = $upcontent.Length
+			$Run = $freq.GetRequestStream()
+			$Run.Write($upcontent, 0, $upcontent.Length)
+			$Run.Close()
+			$Run.Dispose()
+			return 0
+		} else {
+			write-host "FTP User not set"
+			return -1
+		}
+	}
+		catch {
+			return -1
+		}
+}
+# lastline
 Export-ModuleMember -function * -alias *
+
+		
+
+
 
 			
 

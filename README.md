@@ -21,6 +21,18 @@ Use:  Import-Module Skytap [-verbose]
 	
 Syntax help:
    Get-Help <Function Name>
+   
+v2.1 - added functions:
+	Edit-VM
+	Edit-VMUserdata
+	Get-Usage
+	Get-AuditReport
+	Get-Metadata  ( only works from within a vm )
+	Send-SharedDrive  - simple ftp to skytap shared drive
+		requires additional entries in user_token
+			ftpuser = '321_measel'
+			ftppwd = '7tBAAHfhC8A'
+			ftpregion = 'from your account page'
 	
 List of Functions ( 04/27/16 )
 

@@ -1598,11 +1598,11 @@ function Add-UserToGroup( [string]$groupId, [string]$userId ){
         Get-Metadata
         
     .EXAMPLE
-      $meta = get-metadata
+      $meta = Get-Metadata
   #>
-function get-metadata
+function Get-Metadata
 	{
-	$uri = 'http://gw/skytap'
+	$uri = 'http://169.254.169.254/skytap' 
 	try {
 		$meta = Invoke-WebRequest $uri -Method GET -ContentType 'application/json' -UseBasicParsing
 		$result = $meta.Content | convertfrom-json
@@ -1619,10 +1619,10 @@ function get-metadata
 
 
 
-function Send-sharedrive([string]$localFilename, [string]$remoteFilename)
+function Send-SharedDrive([string]$localFilename, [string]$remoteFilename)
     {
     	try {
-			$furl = 'ftp://ftp-uswest.skytap.com/shared_drive'
+		$furl = 'ftp://' + $ftpregion + '/shared_drive'
 		$freq = [System.Net.FtpWebRequest]::Create($furl+'/'+$remoteFilename)
 		if ($ftpuser) {
 			$freq.Credentials = New-Object System.Net.NetworkCredential($ftpuser,$ftppwd)
@@ -1630,7 +1630,7 @@ function Send-sharedrive([string]$localFilename, [string]$remoteFilename)
 			$freq.UseBinary = $True
 			$freq.UsePassive = $True
 			$freq.KeepAlive = $False
-			$localfile = 'c:\users\skytap\'+$localFilename
+			$localfile = $localFilename
 			$upcontent = gc -en byte $localfile
 			$freq.ContentLength = $upcontent.Length
 			$Run = $freq.GetRequestStream()

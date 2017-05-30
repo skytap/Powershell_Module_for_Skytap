@@ -763,7 +763,7 @@ function Get-Projects ([string]$projectId,[string]$attributes,[string]$v2="T",[i
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers  	-UseBasicParsing									
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
 								return $result
@@ -881,7 +881,7 @@ function Get-Departments ([string]$departmentId,[string]$attributes,[string]$v2=
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 									
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 	-UseBasicParsing								
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
 								return $result
@@ -959,7 +959,7 @@ function Get-Users ([string]$userId,[string]$attributes,[string]$v2="T",[int]$st
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 	-UseBasicParsing							
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
 								return $result
@@ -1040,7 +1040,7 @@ function Get-Configurations ([string]$configId, [string]$attributes,[string]$v2=
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 							
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers -UseBasicParsing  							
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
 								return $result
@@ -1126,7 +1126,7 @@ function Get-Templates ([string]$templateId, [string]$attributes,[string]$v2='T'
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 										
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers -UseBasicParsing								
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
 								return $result
@@ -1410,7 +1410,7 @@ function Get-Schedules ([string]$scheduleId, [string]$attributes,[string]$v2='T'
 								}
 							}
 						write-host $uri
-						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers 
+						$result = Invoke-WebRequest -Uri $uri -Method GET -ContentType 'application/json' -Headers $global:headers  -UseBasicParsing
 										
 							} catch { 
 								$result = Show-WebRequestFailure($_.Exception)
@@ -1647,6 +1647,70 @@ function Send-SharedDrive([string]$localFilename, [string]$remoteFilename)
 			return -1
 		}
 }
+#new 5/30
+function Add-EnvironmentTag( [string]$configId, $taglist ){
+<#
+   .SYNOPSIS
+     Add one or more tags to an environment
+   .SYNTAX
+      Add-EnvironmentTag ConfigId "tag"
+   .EXAMPLE
+     Add-EnvironmentTag 12345 "my_special_tag"
+     Or
+     $tlist = @("tag1","tag2","tagX")
+     Add-EnvironmentTag 515151 $tlist
+ #>
+   $tags = @()
+    try {
+        $uri = "$url/v2/configurations/$configId/tags"
+        foreach ($newtag in $taglist) {
+        	$tag = @{'value' = $newtag}
+        	$tags += $tag
+        }
+        $result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $tags)  -ContentType "application/json" -Headers $headers 
+        $result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+            } catch { 
+                $global:errorResponse = $_.Exception
+                $result = Show-RequestFailure
+                return $result
+        }
+    return $result
+    }
+Set-Alias Tag-Configuration Add-EnvironmentTag
+Set-Alias Tag-Environment Add-EnvironmentTag
+
+function Add-TemplateTag( [string]$TemplateId, $taglist ){
+<#
+   .SYNOPSIS
+     Add one or more tags to an Template
+   .SYNTAX
+      Add-TemplateTag TemplateId "tag"
+   .EXAMPLE
+     Add-TemplateTag 12345 "my_special_tag"
+     Or
+     $tlist = @("tag1","tag2","tagX")
+     Add-TemplateTag 515151 $tlist
+ #>
+   $tags = @()
+    try {
+        $uri = "$url/v2/templates/$TemplateId/tags"
+        foreach ($newtag in $taglist) {
+        	$tag = @{'value' = $newtag}
+        	$tags += $tag
+        }
+        $result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $tags)  -ContentType "application/json" -Headers $headers 
+        $result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+            } catch { 
+                $global:errorResponse = $_.Exception
+                $result = Show-RequestFailure
+                return $result
+        }
+    return $result
+    }
+Set-Alias Tag-Configuration Add-TemplateTag
+Set-Alias Tag-Template Add-TemplateTag
+
+
 # lastline
 Export-ModuleMember -function * -alias *
 

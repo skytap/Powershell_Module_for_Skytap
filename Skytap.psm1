@@ -22,6 +22,9 @@ if ($PSVersionTable.PSVersion.major -lt 4) {
 	return
 }
 
+# use TLS 1.2 rather than powershell default of 1.0
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 function LogWrite ([string]$logthis) {              # logwrite INFO This is Info   -- logwrite DEBUG this is debuggin
 	$d = get-date -f o
 	#$loglevel = $logString.split(" ")[0]

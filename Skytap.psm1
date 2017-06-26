@@ -446,6 +446,45 @@ function Remove-Configuration ([string]$configId) {
 		}
 Set-Alias  Remove-Environment Remove-Configuration
 
+function Remove-Tag ([string]$configId, [string]$tagId) {
+<#
+    .SYNOPSIS
+      Remove (DELETE) tag
+    .SYNTAX
+       Remove-Tag $tag_id 
+    .EXAMPLE
+      Remove-Tag -configId 5456555 -tagId 12345 
+      Remove-Tag 5456555 12345
+      Remove-Tag 5456555 ALL
+  #>
+
+	$uri = "$url/configurations/$configId/tags/$tagId"
+	if ($tagId -eq "All") {
+		$oldTags = get-tags $configId
+		 foreach ($tag in $oldTags) {
+		 	 try {
+				$result = Invoke-RestMethod -Uri $uri -Method DELETE -ContentType "application/json" -Headers $headers 
+				$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+				}
+			}					
+	} else {
+		try {
+			$result = Invoke-RestMethod -Uri $uri -Method DELETE -ContentType "application/json" -Headers $headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	}	
+	return $result
+}		
+
+
 function Remove-Project ([string]$projectId) {
 <#
     .SYNOPSIS
@@ -1608,7 +1647,7 @@ function Get-Metadata
 	$uri = 'http://169.254.169.254/skytap' 
 	try {
 		$meta = Invoke-WebRequest $uri -Method GET -ContentType 'application/json' -UseBasicParsing
-		$result = $meta.Content | convertfrom-json
+		$meta.Content | convertfrom-json
 		#$myhost = $mc.name + "-" + $mc.id
 		#write-output $myhost
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
@@ -1712,6 +1751,47 @@ function Add-TemplateTag( [string]$TemplateId, $taglist ){
     }
 Set-Alias Tag-Configuration Add-TemplateTag
 Set-Alias Tag-Template Add-TemplateTag
+
+function Get-Tags ([string]$configId, [string]$templateId, [string]$assetId ) {
+<#
+    .SYNOPSIS
+      Get Tags for an Environment, Template or Asset
+    .SYNTAX
+       Get-Tag configId 
+       Returns tags
+    .EXAMPLE
+      Get-Tag 12345  
+  #>
+  		if ($configId) {
+  			$uri = "$global:url/configurations/$configId/tags" 
+  		} else {	
+  			if ($templateId) {
+  				$uri = "$global:url/templates/$templateId/tags"
+			} else {
+				if ($assetId) {
+					$uri = "$global:url/assets/$assetId/tags"
+				} else {
+						$result = New-Object -TypeName psobject -Property @{
+						requestResultCode = [int]-1
+						eDescription = "Missing parameter"
+						eMessage = "You must supply an environment or template ID"
+						method = "Get-Tags"
+						}
+						return $result
+				}
+			}
+		}	
+		try {				
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+				}
+			return $result
+}
+
 
 
 # lastline

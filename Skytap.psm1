@@ -217,7 +217,7 @@ function Edit-NetworkAdapter ( [string]$configId, $vmid, $interfaceId, $interfac
 	try {
 		$uri = "$url/configurations/$configId/vms/$vmid/interfaces/$interfaceId"
 		
-		$body = $Attributes
+		$body = $interfaceAttributes
 		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 			} catch { 

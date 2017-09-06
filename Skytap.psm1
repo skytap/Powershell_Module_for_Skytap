@@ -198,6 +198,37 @@ function Edit-VM ( [string]$configId, $vmid, $vmAttributes ){
 		}
 	return $result
 	}
+	
+function Edit-NetworkAdapter ( [string]$configId, $vmid, $interfaceId, $interfaceAttributes ){
+<#
+     .SYNOPSIS
+      Change network interface attributes
+    .SYNTAX
+       Edit-NetworkAdapter  ConfigId VMId interfaceId Attribute-Hash
+    .EXAMPLE
+      Edit-NetworkAdapter 12345 54321 44444 @{hostname='my vm'; ip='10.10.1.1'}
+      
+      Or
+      
+      $Attrib = @{hostname='my vm';  ip='10.10.1.1'}
+      Edit-NetworkAdapter 12345 54321 44444 $Attrib
+      
+  #>
+	try {
+		$uri = "$url/configurations/$configId/vms/$vmid/interfaces/$networkId"
+		
+		$body = $Attributes
+		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+	
+Set-Alias Edit-Adapter Edit-NetworkAdapter
 
 function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
 <#
@@ -555,7 +586,7 @@ function Add-TemplateToConfiguration ([string]$configId, [string]$templateId) {
 	}
 Set-Alias  Add-TemplateToEnvironment Add-TemplateToConfiguration
 	
-function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[string]$email,[string]$accountRole="restricted_user") {
+function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[string]$email,[string]$accountRole="restricted_user",[boolean]$can_import=$False,[string]$can_export=$False,[string]$time_zone='Pacific Time (US & Canada)',[string]$region='US-West') {
 <#
     .SYNOPSIS
       Adds a new user
@@ -565,14 +596,20 @@ function Add-User ([string]$loginName,[string]$firstName, [string]$lastName,[str
       Add-User mmeasel mike measel mmeasel@skytap.com admin
   #>
 	try {
-		$uri = "$global:url/users"
+		$uri = "$global:url/v1/users"
 		$body = @{
 				login_name = $loginName
 				email = $email
 				first_name = $firstName
 				last_name = $lastName
 				account_role = $accountRole
+				time_zone = $time_zone
+				can_import = $can_import
+				can_export = $can_export
+				default_region = $region
 				}
+		$str = $body | out-string
+		write-host $str
 		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
 		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 
@@ -1626,6 +1663,8 @@ function Add-UserToGroup( [string]$groupId, [string]$userId ){
 
 			} catch { 
 				$global:errorResponse = $_.Exception
+				Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+				Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
 				$result = Show-RequestFailure
 				return $result
 			}

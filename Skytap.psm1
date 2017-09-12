@@ -312,6 +312,27 @@ function Connect-Network ([string]$sourceNetwork, [string]$destinationNetwork){
 	return $result
 	}
 
+function Detach-Network ([string]$tunnel){
+<#
+    .SYNOPSIS
+      Detach ICNR Tunnel
+    .SYNTAX
+       Detach-Network TunnelId
+    .EXAMPLE
+      Detach-Network tunnel-123456-789012
+  #>
+	try {
+		$uri = "$url/tunnels/$tunnel"
+
+		$result = Invoke-RestMethod -Uri $uri -Method DELETE -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch {
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}	
 
 function New-EnvironmentfromTemplate ( [string]$templateId ){
 <#

@@ -262,7 +262,7 @@ function Edit-VMUserdata ( [string]$configId, $vmid, $userdata ){
 	
 		
 	
-function Update-RunState ( [string]$configId, [string]$newstate ){
+function Update-RunState ( [string]$configId, [string]$newstate, [string]$vmId ){
 <#
     .SYNOPSIS
       Change and environments runstate
@@ -272,7 +272,11 @@ function Update-RunState ( [string]$configId, [string]$newstate ){
       Update-RunState 12345 running
   #>
 	try {
-		$uri = "$url/configurations/$configId"
+		if ($vmId){
+			$uri = "$url/configurations/$configId/vms/$vmId"
+		}else{
+			$uri = "$url/configurations/$configId"
+		}
 		
 		$body = @{
 			runstate = $newstate
@@ -312,14 +316,14 @@ function Connect-Network ([string]$sourceNetwork, [string]$destinationNetwork){
 	return $result
 	}
 
-function Detach-Network ([string]$tunnel){
+function Remove-Network ([string]$tunnel){
 <#
     .SYNOPSIS
-      Detach ICNR Tunnel
+      Remove ICNR Tunnel
     .SYNTAX
-       Detach-Network TunnelId
+       Remove-Network TunnelId
     .EXAMPLE
-      Detach-Network tunnel-123456-789012
+      Remove-Network tunnel-123456-789012
   #>
 	try {
 		$uri = "$url/tunnels/$tunnel"

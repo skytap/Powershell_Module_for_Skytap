@@ -199,6 +199,34 @@ function Edit-VM ( [string]$configId, $vmid, $vmAttributes ){
 	return $result
 	}
 	
+function Add-NetworkAdapter([string]$configId, $vmid, [string]$nicType="default"){
+<#
+     .SYNOPSIS
+      Change network interface attributes
+    .SYNTAX
+       Add-NetworkAdapter  ConfigId VMId NIC-TYPE
+       For x86 VMs, one of: default, e1000, pcnet32, vmxnet, vmxnet3, or e1000e.
+       For Power VMs, must be default.
+    .EXAMPLE
+      Add-NetworkAdapter 12345 54321 vmxnet3
+ #>
+	try {
+		$uri = "$url/configurations/$configId/vms/$vmid/interfaces/$interfaceId"
+		
+		$body = @{nic_type = $nicType }
+
+		$result = Invoke-RestMethod -Uri $uri -Method Post -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+	
+Set-Alias Add-Adapter Add-NetworkAdapter	
+	
 function Edit-NetworkAdapter ( [string]$configId, $vmid, $interfaceId, $interfaceAttributes ){
 <#
      .SYNOPSIS
@@ -1571,9 +1599,9 @@ function Connect-PublicIP ([string]$vmId, [string]$interfaceId,[string]$publicIP
     .SYNOPSIS
       Connect Public IP to network
     .SYNTAX
-       Connect-Network Source-Network Destination-Network
+       Connect-PublicIP vmID interfaceID publicIP
     .EXAMPLE
-      Connect-Network 78901 10987
+      Connect-PublicIP 789012 nic-11856481-23685181-0 185.18.0.3
   #>
   write-host $publicIP
 	try {

@@ -10,6 +10,18 @@ Installation - copy these files to powershell module directory:
 	(substitute your \User directory )
 
 	$home\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>
+	
+powershell download from Git:
+
+	Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+	Invoke-WebRequest -Uri https://github.com/skytap/Powershell_Module_for_Skytap/archive/master.zip -Outfile C:\Users\Administrator\skytap
+	$destination = ‘Documents/WindowsPowershell/Modules’
+	Mkdir $destination
+	Add-Type -assembly "system.io.compression.filesystem"
+	[io.compression.zipfile]::ExtractToDirectory(‘skytap’,$destination)
+	mv $destination/Powershell_Module_for_Skytap-master skytap
+
+
 
 example:    Directory: C:\Users\Skytap\Documents\WindowsPowerShell\Modules\Skytap
 

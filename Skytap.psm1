@@ -1736,7 +1736,9 @@ function Add-UserToGroup( [string]$groupId, [string]$userId ){
   #>
 function Get-Metadata
 	{
-	$uri = 'http://169.254.169.254/skytap' 
+       $ip = Test-Connection $env:computername -count 1 | select Address,Ipv4Address
+       $oct1,$oct2,$oct3,$oct4 = $ip.IPV4Address.split('.')
+	$uri = "http://$oct1.$oct2.$oct3.254/skytap"
 	try {
 		$meta = Invoke-WebRequest $uri -Method GET -ContentType 'application/json' -UseBasicParsing
 		$meta.Content | convertfrom-json
@@ -1885,7 +1887,165 @@ function Get-Tags ([string]$configId, [string]$templateId, [string]$assetId ) {
 }
 
 
+function Get-VMCredentials ([string]$vmId) {
+<#
+    .SYNOPSIS
+      Get VM credentials
+    .SYNTAX
+       Get-VMCredentials
+       Returns list of credentials defined for the machine
+    .EXAMPLE
+      Get-VMCredentials 
+  #>
+		try {
+			$uri = "$global:url/vms/$vmId/credentials"
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+				}
+			return $result
+	}
 
+function Attach-WAN ([string]$envId, [string]$networkId,[string]$wanId){
+<#
+    .SYNOPSIS
+      Attach to VPN/WAN
+    .SYNTAX
+       Attach-WAN environment network vpnid
+  #>
+  write-host $publicIP
+	try {
+		$uri = "$global:url/v2/configurations/$envId/networks/$networkId/vpns"
+		write-host $uri
+		$body = @{
+				vpn_id = $wanId
+			}
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		write-host $result.headers
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch {
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+	
+function Connect-WAN ([string]$envId, [string]$networkId,[string]$wanId){
+<#
+    .SYNOPSIS
+      Connect to VPN/WAN
+    .SYNTAX
+       Connect-WAN environment network vpnid
+  #>
+  write-host $publicIP
+	try {
+		$uri = "$global:url/v2/configurations/$envId/networks/$networkId/vpns/$wanId"
+		write-host $uri
+		$body = @{
+				connected = $true
+			}
+
+		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $global:headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch {
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+	
+function Get-WAN ([string]$wanId) {
+<#
+    .SYNOPSIS
+      Get VPN(s)
+    .SYNTAX
+       Get-WAN [wanId]
+  #>
+
+		try {
+			if ($wanId) {
+				$uri = "$global:url/v2/vpns/$wanId"
+			} else {
+				$uri = "$global:url/v2/vpns"
+			}
+			write-host $uri
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+				}
+			return $result
+	}
+Set-Alias Get-VPN Get-WAN
+Set-Alias Get-WANs Get-WAN
+Set-Alias Get-VPNs Get-WAN
+
+function Get-Network ([string]$configId, [string]$networkId) {
+	<#
+    .SYNOPSIS
+      Get Environment Networks
+    .SYNTAX
+       Get-Network [networkId]
+  #>
+
+		try {
+			if ($networkId) {
+				$uri = "$global:url/v2/configurations/$configId/networks/$networkId"
+			} else {
+				$uri = "$global:url/v2/configurations/$configId/networks"
+			}
+			write-host $uri
+			$result = Invoke-RestMethod -Uri $uri -Method GET -ContentType "application/json" -Headers $global:headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+				}
+			return $result
+	}
+Set-Alias Get-VPN Get-WAN
+
+function Update-EnvironmentUserdata ( [string]$configId, $userdata ){
+<#
+    .SYNOPSIS
+      Change userdata 
+    .SYNTAX
+      Update-EnvironmentUserdata ConfigId  Contents
+       {
+	"contents": "Text you want saved in the user data field"
+	}
+    .EXAMPLE
+      Update-EnvironmentUserdata 12345   @{contents="text for userdata field"}
+      Or
+      $userdata = @{"contents"="This machine does not conform"}
+      Update-EnvironmentUserdata 12345  $userdata
+      
+  #>
+	try {
+		$uri = "$url/v2/configurations/$configId/user_data"
+		
+		$body = $userdata
+		$result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+	return $result
+	}
+	
+
+	
+		
 # lastline
 Export-ModuleMember -function * -alias *
 

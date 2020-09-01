@@ -139,6 +139,45 @@ function Add-ConfigurationToProject ([string]$configId, [string]$projectId ){
 		}
 		return $result
 	}
+	
+function Copy-Configuration ([string]$configId, [string]$vlist ){
+ <#
+    .SYNOPSIS
+     Copy a configuration or copy selected vms in a configuration
+    .SYNTAX
+       Copy-Configuration EnvironmentId $vlist
+    .EXAMPLE
+      Copy-Configuration 12345
+      or
+      $vlist = @("22222","33333")
+      Copy-Configuration 12345 $vlist
+  #>
+
+	try {
+		if ($vlist) {
+				
+			$body = @{
+					configuration_id = $configId
+					vm_ids = @($vlist)
+				}
+		    } else {
+		    	$body = @{
+		    		    configuration_id = $configId
+		    	}
+		    }
+		write-host $body.keys
+		write-host $body.values
+
+		$uri =  "$url/configurations"
+		$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $headers 
+		$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+			} catch { 
+				$global:errorResponse = $_.Exception
+				$result = Show-RequestFailure
+				return $result
+		}
+		return $result
+	}
 
 function Edit-Configuration ( [string]$configId, $configAttributes ){
 <#

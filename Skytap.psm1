@@ -512,29 +512,46 @@ function Publish-URL ([string]$configId, [string]$ptype, [string]$pname,[Boolean
 			return $result
 			}
 
-function Save-ConfigurationToTemplate ([string]$configId, [string]$tname) {
+function Save-ConfigurationToTemplate ([string]$configId, [string]$selectedVMs, [string]$selectedNetworks="none", [string]$tname) {
 <#
     .SYNOPSIS
       Save an environment as a template
     .SYNTAX
-       Save-ConfigurationToTemplate
+       Save-ConfigurationToTemplate configId selectedVMs selectedNetworks tname
        Returns template ID
     .EXAMPLE
-      Save-ConfigurationToTemplate 12345 
+      Save-ConfigurationToTemplate -configId 12345 -selectedVMs 686868
   #>
 	try {
 			$uri = "$url/templates"
+			$body = @{
+				configuration_id = $configId
+				
+			}
 			if ($tname) {
 				$name = $tname 
-				$body = @{
-					configuration_id = $configId
+				$body += @{
 					name = $name
 				}
-			} else {
-				$body = @{
-					configuration_id = $configId
+			}
+			if ($selectedVMs) {
+				$vms = @($selectedVMs)
+				$body += @{
+					vm_instance_multiselect = $vms
 				}
 			}
+
+			if ($selectedNetworks) { 
+				if ($selectedNetworks = 'none') {
+					$networks = @()
+				}else{
+					$networks = @($selectedNetworks)
+				}
+				$body += @{
+					network_multiselect = $networks
+				}
+			}
+			write-host (convertto-json $body)
 			$result = Invoke-RestMethod -Uri $uri -Method POST -Body (ConvertTo-Json $body) -ContentType "application/json" -Headers $headers 
 			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
 				} catch { 

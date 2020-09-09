@@ -585,6 +585,29 @@ function Remove-Configuration ([string]$configId) {
 			return $result
 		}
 Set-Alias  Remove-Environment Remove-Configuration
+		
+function Remove-Template ([string]$templateId) {
+<#
+    .SYNOPSIS
+      Remove (DELETE) a template
+    .SYNTAX
+       Remove-Template
+    .EXAMPLE
+      Remove-Template 12345 
+  #>
+	try {
+			$uri = "$url/templates/$templateId"
+			write-host $uri
+			$result = Invoke-RestMethod -Uri $uri -Method DELETE -ContentType "application/json" -Headers $headers 
+			$result | Add-member -MemberType NoteProperty -name requestResultCode -value 0
+				} catch { 
+					$global:errorResponse = $_.Exception
+					$result = Show-RequestFailure
+					return $result
+			}
+			return $result
+		}
+
 
 function Remove-Tag ([string]$configId, [string]$tagId) {
 <#

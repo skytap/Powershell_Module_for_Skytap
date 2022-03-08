@@ -22,7 +22,7 @@ powershell download from Git:
 	Mkdir $destination
 	Add-Type -assembly "system.io.compression.filesystem"
 	[io.compression.zipfile]::ExtractToDirectory(‘skytap’,$destination)
-	mv $destination/Powershell_Module_for_Skytap-master skytap
+	mv $destination/Powershell_Module_for_Skytap-master $destination/skytap
 
 
 Use:  Import-Module Skytap [-verbose]

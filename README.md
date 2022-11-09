@@ -1,17 +1,25 @@
 # Powershell_Module
 A powershell module to simplify Skytap API usage
 
-Installation - copy these files to powershell module directory: 
+Installation - 
+
+   Copy these files to powershell module directory: 
 
 	skytap.psd1
 	Skytap.psm1
-	user_token
+	
 
-	(substitute your \User directory )
+	(substitute your \User directory for $home)
 
 	$home\Documents\WindowsPowerShell\Modules\<Module Folder>\<Module Files>
 	
 	example directory: C:\Users\Skytap\Documents\WindowsPowerShell\Modules\Skytap
+
+    Copy this file to your current directory and edit:
+
+	user_token
+
+	Replace the values in that file with the ones you can find in the Skytap GUI under My Profile.
 	
 	
 powershell download from Git:
@@ -34,7 +42,7 @@ Syntax help:
 
    Get-Help <Function Name>
  
-List of Functions ( 03/08/2022 )
+List of Functions ( 11/08/2022 )
 
  Add-ConfigurationToProject   
  Add-Department   
@@ -54,11 +62,15 @@ List of Functions ( 03/08/2022 )
  Connect-Network   
  Connect-PublicIP   
  Connect-WAN   
- Copy-Configuration   
+ Copy-Configuration
+ Copy-EnvironmentToRegion
+ Copy-TemplateToRegion   
  Edit-Configuration      alias   Edit-Environment   
  Edit-NetworkAdapter   alias   Edit-Adapter     
  Edit-VM   
- Edit-VMUserdata   
+ Edit-Userdata
+     alias   Update-EnvironmentUserdata
+     alias   Update-VMUserdata   
  Get-AuditReport   
  Get-Configurations   
      alias   Get-Configuration   

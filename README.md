@@ -45,11 +45,11 @@ powershell download from Git:
  
 List of Functions ( 11/08/2022 )
 
-1. Add-ConfigurationToProject   
-2. Add-Department   
-3. Add-EnvironmentTag   
-..1. Tag-Configuration
-..2. Tag-Environment    
+- Add-ConfigurationToProject   
+- Add-Department   
+- Add-EnvironmentTag   
+  - Tag-Configuration
+  - Tag-Environment    
 4. Add-Group   
 5. Add-NetworkAdapter  
 ..1. Add-Adapter

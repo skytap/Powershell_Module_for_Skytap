@@ -43,92 +43,92 @@ powershell download from Git:
 
    Get-Help <Function Name>
  
-List of Functions ( 11/08/2022 )
+### List of Functions ( 11/08/2022 )
 
 - Add-ConfigurationToProject   
 - Add-Department   
 - Add-EnvironmentTag   
   - Tag-Configuration
   - Tag-Environment    
-4. Add-Group   
-5. Add-NetworkAdapter  
-..1. Add-Adapter
-6. Add-Schedule   
-7. Add-TemplateTag   
-..1. Tag-Template   
-8. Add-TemplateToConfiguration   
-..1. Add-TemplateToEnvironment   
-9. Add-TemplateToProject   
-10. Add-User   
-11. Add-UserToGroup   
-12. Add-UserToProject   
-13. Attach-WAN   
-14. Connect-Network   
-15. Connect-PublicIP   
-16. Connect-WAN   
-17. Copy-Configuration
-18. Copy-EnvironmentToRegion
-19. Copy-TemplateToRegion   
-20. Edit-Configuration      
-..1. Edit-Environment   
-21. Edit-NetworkAdapter
-..1. Edit-Adapter     
-22. Edit-VM   
-23. Edit-Userdata
-..1. Update-EnvironmentUserdata
-..1. Update-VMUserdata   
-24. Get-AuditReport   
-25. Get-Configurations   
-..1. Get-Configuration   
-..2. Get-Environment   
-..3. Get-Environments   
-26. Get-DepartmentQuotas   
-27. Get-Departments   
-28. Get-Metadata  ( only works from within a vm )
-29. Get-Network   
-30. Get-ProjectEnvironments   
-31. Get-Projects   
-32. Get-PublicIPs   
-33. Get-PublishedServices   
-34. Get-PublishedURLDetails   
-35. Get-PublishedURLs   
-36. Get-Schedules
-..1. Get-Schedule   
-37. Get-Tags   
-38. Get-Templates
-..1. Get-Template   
-39. Get-Usage   
-40. Get-Users
-..1. Get-User   
-41. Get-VMCredentials   
-42. Get-VMs    
-43. Get-VMUserData   
-44. Get-WAN
-..1. Get-WANs   
-..2. Get-VPN   
-..3. Get-VPNs   
-45. LogWrite   
-46. New-EnvironmentfromTemplate   
-47. New-Project   
-48. Publish-Service   
-49. Publish-URL   
-50. Remove-Configuration
-..1. Remove-Environment    
-51. Remove-Network   
-52. Remove-Project   
-53. Remove-Tag   
-54. Remove-Template   
-55. Rename-Environment 
-..1. Rename-Configuration   
-56. Save-ConfigurationToTemplate
-..1. Save-EnvironmentToTemplate   
-57. Send-SharedDrive  - simple ftp to skytap shared drive
-58. Set-Authorization   
-59. Show-RequestFailure   
-60. Show-WebRequestFailure   
-61. Update-AutoSuspend   
-62. Update-EnvironmentUserdata   
-63. Update-RunState   
+- Add-Group   
+- Add-NetworkAdapter  
+  - Add-Adapter
+- Add-Schedule   
+- Add-TemplateTag   
+  - Tag-Template   
+- Add-TemplateToConfiguration   
+  - Add-TemplateToEnvironment   
+- Add-TemplateToProject   
+- Add-User   
+- Add-UserToGroup   
+- Add-UserToProject   
+- Attach-WAN   
+- Connect-Network   
+- Connect-PublicIP   
+- Connect-WAN   
+- Copy-Configuration
+- Copy-EnvironmentToRegion
+- Copy-TemplateToRegion   
+- Edit-Configuration      
+  - Edit-Environment   
+- Edit-NetworkAdapter
+  - Edit-Adapter     
+- Edit-VM   
+- Edit-Userdata
+  - Update-EnvironmentUserdata
+  - Update-VMUserdata   
+- Get-AuditReport   
+- Get-Configurations   
+  - Get-Configuration   
+  - Get-Environment   
+  - Get-Environments   
+- Get-DepartmentQuotas   
+- Get-Departments   
+- Get-Metadata  ( only works from within a vm )
+- Get-Network   
+- Get-ProjectEnvironments   
+- Get-Projects   
+- Get-PublicIPs   
+- Get-PublishedServices   
+- Get-PublishedURLDetails   
+- Get-PublishedURLs   
+- Get-Schedules
+  - Get-Schedule   
+- Get-Tags   
+- Get-Templates
+  - Get-Template   
+- Get-Usage   
+- Get-Users
+  - Get-User   
+- Get-VMCredentials   
+- Get-VMs    
+- Get-VMUserData   
+- Get-WAN
+  - Get-WANs   
+  - Get-VPN   
+  - Get-VPNs   
+- LogWrite   
+- New-EnvironmentfromTemplate   
+- New-Project   
+- Publish-Service   
+- Publish-URL   
+- Remove-Configuration
+  - Remove-Environment    
+- Remove-Network   
+- Remove-Project   
+- Remove-Tag   
+- Remove-Template   
+- Rename-Environment 
+  - Rename-Configuration   
+- Save-ConfigurationToTemplate
+  - Save-EnvironmentToTemplate   
+- Send-SharedDrive  - simple ftp to skytap shared drive
+- Set-Authorization   
+- Show-RequestFailure   
+- Show-WebRequestFailure   
+- Update-AutoSuspend   
+- Update-EnvironmentUserdata   
+- Update-RunState   
  
 
 **Questions or comments to mmeasel@skytap . com**

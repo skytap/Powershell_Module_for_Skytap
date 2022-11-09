@@ -1,5 +1,6 @@
-# Powershell_Module
-####A powershell module to simplify Skytap API usage
+# Skytap Powershell Module
+
+#### A powershell module to simplify Skytap API usage
 
 ## Installation - 
 
@@ -122,10 +123,6 @@ __Rename-Configuration
 Save-ConfigurationToTemplate
 __Save-EnvironmentToTemplate   
 Send-SharedDrive  - simple ftp to skytap shared drive
-	requires additional entries in user_token
-		ftpuser = '321_measel'
-		ftppwd = '7tBAAHfhC8A'
-		ftpregion = 'from your account page'
 Set-Authorization   
 Show-RequestFailure   
 Show-WebRequestFailure   

@@ -1711,6 +1711,31 @@ function Rename-Environment( [string]$configId, [string]$newName ){
     }
 Set-Alias Rename-Configuration Rename-Environment   
     
+function Rename-Template( [string]$templateId, [string]$newName ){
+<#
+   .SYNOPSIS
+     Change a templates's name
+   .SYNTAX
+      Rename-Template templateId "new template name"
+   .EXAMPLE
+     Rename-Template 12345 "my renamed template"
+ #>
+    try {
+        $uri = "$url/templates/$templateId"
+        
+        $body = @{
+            name = $newName
+        }
+        $result = Invoke-RestMethod -Uri $uri -Method PUT -Body (ConvertTo-Json $body)  -ContentType "application/json" -Headers $headers 
+        $result | Add-member -MemberType NoteProperty -name resultCode -value 0
+            } catch { 
+                $global:errorResponse = $_.Exception
+                $result = Show-RequestFailure
+                return $result
+        }
+    return $result
+    }
+    
 function Update-AutoSuspend ( [string]$configId, [string]$suspendOnIdle ){
 <#
    .SYNOPSIS
